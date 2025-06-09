@@ -9,13 +9,25 @@ from OCC.Core.BRepFill import BRepFill_Filling
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakePrism
 from OCC.Core.BRepTools import breptools_UVBounds
 from OCC.Core.BRepTopAdaptor import BRepTopAdaptor_FClass2d
-from OCC.Core.GeomAbs import (GeomAbs_BezierSurface, GeomAbs_BSplineSurface,
-                              GeomAbs_C0, GeomAbs_C1, GeomAbs_C2, GeomAbs_C3,
-                              GeomAbs_Cone, GeomAbs_Cylinder, GeomAbs_G1,
-                              GeomAbs_G2, GeomAbs_OffsetSurface,
-                              GeomAbs_OtherSurface, GeomAbs_Plane,
-                              GeomAbs_Sphere, GeomAbs_SurfaceOfExtrusion,
-                              GeomAbs_SurfaceOfRevolution, GeomAbs_Torus)
+from OCC.Core.GeomAbs import (
+    GeomAbs_BezierSurface,
+    GeomAbs_BSplineSurface,
+    GeomAbs_C0,
+    GeomAbs_C1,
+    GeomAbs_C2,
+    GeomAbs_C3,
+    GeomAbs_Cone,
+    GeomAbs_Cylinder,
+    GeomAbs_G1,
+    GeomAbs_G2,
+    GeomAbs_OffsetSurface,
+    GeomAbs_OtherSurface,
+    GeomAbs_Plane,
+    GeomAbs_Sphere,
+    GeomAbs_SurfaceOfExtrusion,
+    GeomAbs_SurfaceOfRevolution,
+    GeomAbs_Torus,
+)
 from OCC.Core.GeomLProp import GeomLProp_SLProps
 from OCC.Core.gp import gp_Dir, gp_Pnt, gp_Pnt2d, gp_TrsfForm
 from OCC.Core.ShapeAnalysis import ShapeAnalysis_Surface
@@ -23,8 +35,14 @@ from OCC.Core.TopAbs import TopAbs_IN, TopAbs_REVERSED
 from OCC.Core.TopLoc import TopLoc_Location
 from OCC.Core.TopoDS import TopoDS_Face
 
-from occwl.base import BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
-    EdgeContainerMixin, VertexContainerMixin, SurfacePropertiesMixin
+from occwl.base import (
+    BoundingBoxMixin,
+    TriangulatorMixin,
+    WireContainerMixin,
+    EdgeContainerMixin,
+    VertexContainerMixin,
+    SurfacePropertiesMixin,
+)
 from occwl.edge import Edge
 from occwl.shape import Shape
 
@@ -33,8 +51,15 @@ import occwl.geometry.interval as Interval
 from occwl.geometry.box import Box
 
 
-class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
-    EdgeContainerMixin, VertexContainerMixin, SurfacePropertiesMixin):
+class Face(
+    Shape,
+    BoundingBoxMixin,
+    TriangulatorMixin,
+    WireContainerMixin,
+    EdgeContainerMixin,
+    VertexContainerMixin,
+    SurfacePropertiesMixin,
+):
     """
     A topological face in a solid model
     Represents a 3D surface bounded by a Wire
@@ -111,7 +136,9 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
             for edg in edges:
                 fill.Add(edg.topods_shape(), occ_continuity)
         elif isinstance(continuity, list):
-            assert len(edges) == len(continuity), "Continuity should be provided for each edge"
+            assert len(edges) == len(
+                continuity
+            ), "Continuity should be provided for each edge"
             for edg, cont in zip(edges, continuity):
                 occ_cont = str_to_continuity(cont)
                 fill.Add(edg.topods_shape(), occ_cont)
@@ -149,20 +176,20 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
 
         Args:
             uv (np.ndarray or tuple): Surface parameter
-        
+
         Returns:
             bool: Is inside
         """
         result = self._trimmed.Perform(gp_Pnt2d(uv[0], uv[1]))
         return result == TopAbs_IN
-    
+
     def visibility_status(self, uv):
         """
         Check if the uv-coordinate in on the visible region of the face
 
         Args:
             uv (np.ndarray or tuple): Surface parameter
-        
+
         Returns:
             int (TopAbs_STATE enum): 0: TopAbs_IN, 1: TopAbs_OUT, 2: TopAbs_ON, 3: TopAbs_UNKNOWN
         """
@@ -181,8 +208,9 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
         if not loc.IsIdentity():
             tsf = loc.Transformation()
             np_tsf = geom_utils.to_numpy(tsf)
-            assert np.allclose(np_tsf, np.eye(4)), \
-                "Requesting surface for transformed face. /n\
+            assert np.allclose(
+                np_tsf, np.eye(4)
+            ), "Requesting surface for transformed face. /n\
                 Call solid.set_transform_to_identity() to remove the transform \
                 or compound.Transform(np.eye(4)) to bake in the assembly transform"
         return surf
@@ -190,7 +218,7 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
     def reversed_face(self):
         """
         Return a copy of this face with the orientation reversed.
-        
+
         Returns:
             occwl.face.Face: A face with the opposite orientation to this face.
         """
@@ -206,8 +234,9 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
         if not self.topods_shape().Location().IsIdentity():
             tsf = self.topods_shape().Location().Transformation()
             np_tsf = geom_utils.to_numpy(tsf)
-            assert np.allclose(np_tsf, np.eye(4)), \
-                "Requesting surface for transformed face. /n\
+            assert np.allclose(
+                np_tsf, np.eye(4)
+            ), "Requesting surface for transformed face. /n\
                 Call solid.set_transform_to_identity() to remove the transform /n\
                 or compound.transform(np.eye(4)) to bake in the assembly transform"
         srf = BRepAdaptor_Surface(self.topods_shape())
@@ -228,14 +257,13 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
             return srf.BSpline()
         raise ValueError("Unknown surface type: ", surf_type)
 
-
     def point(self, uv):
         """
         Evaluate the face geometry at given parameter
 
         Args:
             uv (np.ndarray or tuple): Surface parameter
-        
+
         Returns:
             np.ndarray: 3D Point
         """
@@ -290,13 +318,13 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
 
     def is_left_of(self, edge):
         """
-        Is this face on the left hand side of the given edge.   We take the 
+        Is this face on the left hand side of the given edge.   We take the
         orientation of the edge into account here
 
                      Edge direction
                             ^
-                            |   
-                  Left      |   Right 
+                            |
+                  Left      |   Right
                   face      |   face
                             |
         Args:
@@ -317,7 +345,7 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
                         found_edge = True
 
         # If we didn't find the edge at all then this function was used incorrectly.
-        # To use it you need to pass in a edge around the given face.  Assert and warn 
+        # To use it you need to pass in a edge around the given face.  Assert and warn
         # the user
         assert found_edge, "Edge doesn't belong to face"
 
@@ -434,9 +462,7 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
         gp_pt = gp_Pnt(pt[0], pt[1], pt[2])
         inv = loc.Transformation().Inverted()
         gp_pt.Transformed(inv)
-        uv = ShapeAnalysis_Surface(surf).ValueOfUV(
-            gp_pt, 1e-9
-        )
+        uv = ShapeAnalysis_Surface(surf).ValueOfUV(gp_pt, 1e-9)
         return np.array(uv.Coord())
 
     def surface_type(self):
@@ -470,7 +496,7 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
         if surf_type == GeomAbs_OtherSurface:
             return "other"
         return "unknown"
-    
+
     def surface_type_enum(self):
         """
         Get the type of the surface geometry as an OCC.Core.GeomAbs enum
@@ -541,19 +567,21 @@ class Face(Shape, BoundingBoxMixin, TriangulatorMixin, WireContainerMixin, \
         if facing == None:
             if return_normals:
                 return (
-                    np.empty(shape=(0,3), dtype=np.float32),
-                    np.empty(shape=(0,3), dtype=np.int32),
-                    np.empty(shape=(0,3), dtype=np.float32)
+                    np.empty(shape=(0, 3), dtype=np.float32),
+                    np.empty(shape=(0, 3), dtype=np.int32),
+                    np.empty(shape=(0, 3), dtype=np.float32),
                 )
             else:
                 return (
-                    np.empty(shape=(0,3), dtype=np.float32),
-                    np.empty(shape=(0,3), dtype=np.int32)
+                    np.empty(shape=(0, 3), dtype=np.float32),
+                    np.empty(shape=(0, 3), dtype=np.int32),
                 )
 
-        vert_nodes = facing.Nodes()
+        vert_nodes = facing.MapNodeArray()
         tri = facing.Triangles()
-        uv_nodes = facing.UVNodes()
+        # vert_nodes = facing.NbNodes()
+        # tri = facing.NbTriangles()
+        uv_nodes = facing.MapUVNodeArray()
         verts = []
         normals = []
         for i in range(1, facing.NbNodes() + 1):
